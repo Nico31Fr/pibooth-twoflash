@@ -1,10 +1,6 @@
 pibooth-flashled
 =================
 
-[![Python 3.6+](https://img.shields.io/badge/python-3.6+-red.svg)](https://www.python.org/downloads)
-[![PyPi package](https://badge.fury.io/py/pibooth-flashled.svg)](https://pypi.org/project/pibooth-flashled)
-[![PyPi downloads](https://img.shields.io/pypi/dm/pibooth-flashled?color=purple)](https://pypi.org/project/pibooth-flashled)
-
 `pibooth-flashled` is a plugin for the [pibooth](https://pypi.org/project/pibooth) application.
 
 It adds a flash with warm white and cold white when the capture is taken.
