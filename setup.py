@@ -10,7 +10,7 @@ HERE = osp.abspath(osp.dirname(__file__))
 
 # Keep packaging metadata independent from the runtime plugin. Importing the
 # plugin here would require hardware dependencies before pip can install them.
-PACKAGE_NAME = 'pibooth-flashled'
+PACKAGE_NAME = 'pibooth-twoflash'
 PACKAGE_VERSION = '1.2.0'
 PACKAGE_DESCRIPTION = 'A pibooth plugin to control warm and cool white LED strips.'
 
@@ -37,8 +37,8 @@ def main():
             'Topic :: Multimedia :: Graphics :: Capture :: Digital Camera',
         ],
         author="Grena",
-        url="https://github.com/Nico31Fr/pibooth-flashled",
-        download_url="https://github.com/Nico31Fr/pibooth-flashled/archive/{}.tar.gz".format(PACKAGE_VERSION),
+        url="https://github.com/Nico31Fr/pibooth-twoflash",
+        download_url="https://github.com/Nico31Fr/pibooth-twoflash/archive/{}.tar.gz".format(PACKAGE_VERSION),
         license='MIT license',
         platforms=['unix', 'linux'],
         keywords=[
@@ -47,13 +47,13 @@ def main():
             'photobooth',
             'led'
         ],
-        py_modules=['pibooth_flashled'],
+        py_modules=['pibooth_twoflash'],
         install_requires=[
             'pibooth>=2.0.0',
             'gpiozero>=1.6'
         ],
         zip_safe=False,  # Don't install the lib as an .egg zipfile
-        entry_points={'pibooth': ["pibooth_flashled = pibooth_flashled"]},
+        entry_points={'pibooth': ["pibooth_twoflash = pibooth_twoflash"]},
     )
 
 

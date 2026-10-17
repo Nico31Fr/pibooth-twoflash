@@ -1,7 +1,7 @@
-pibooth-flashled
+pibooth-twoflash
 =================
 
-`pibooth-flashled` is a plugin for the [pibooth](https://pypi.org/project/pibooth) application.
+`pibooth-twoflash` is a plugin for the [pibooth](https://pypi.org/project/pibooth) application.
 
 It adds a flash with warm white and cold white when the capture is taken.
 
@@ -9,7 +9,7 @@ Install
 -------
 
 ```
-pip3 install git+https://github.com/Nico31Fr/pibooth-flashled.git
+pip3 install git+https://github.com/Nico31Fr/pibooth-twoflash.git
 ```
     
 
@@ -46,5 +46,5 @@ Circuit diagram
 
 Here is the diagram for hardware connections.
 
-![Electronic sketch](https://raw.githubusercontent.com/grenagit/pibooth-flashled/master/docs/images/sketch.png)
+![Electronic sketch](docs/images/sketch.png)
 
