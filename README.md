@@ -3,7 +3,7 @@ pibooth-twoflash
 
 `pibooth-twoflash` is a plugin for the [pibooth](https://pypi.org/project/pibooth) application.
 
-It adds a flash with warm white and cold white when the capture is taken.
+It controls two independent LED outputs when the capture is taken.
 
 Install
 -------
@@ -21,20 +21,20 @@ Below are the new configuration options available in the [pibooth](https://pypi.
 ``` {.ini}
 [FLASH]
 
-# Physical GPIO OUT pin to light a warm white LED strip
-warmwhite_pin = 12
+# GPIO OUT pin for LED 1
+led1_pin = 12
     
-# Physical GPIO OUT pin to light a cool white LED strip
-coolwhite_pin = 13
-		
-# The white balance (warm white, cool white) in percent
-white_balance = (50, 50)
+# GPIO OUT pin for LED 2
+led2_pin = 13
 
-# The brightness in percent
-brightness = 50
-		
-# How long is the fade light in milliseconds (0 to skip it)
-fade_delay = 1000
+# Duration of one complete crossfade cycle in milliseconds
+crossfade_speed = 2000
+
+# Maximum brightness of each LED during the crossfade, in percent
+crossfade_max_brightness = 50
+
+# Brightness of both LEDs during capture, in percent
+capture_brightness = 100
 
 ```
 
@@ -47,4 +47,3 @@ Circuit diagram
 Here is the diagram for hardware connections.
 
 ![Electronic sketch](docs/images/sketch.png)
-

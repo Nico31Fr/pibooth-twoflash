@@ -12,7 +12,7 @@ HERE = osp.abspath(osp.dirname(__file__))
 # plugin here would require hardware dependencies before pip can install them.
 PACKAGE_NAME = 'pibooth-twoflash'
 PACKAGE_VERSION = '1.2.0'
-PACKAGE_DESCRIPTION = 'A pibooth plugin to control warm and cool white LED strips.'
+PACKAGE_DESCRIPTION = 'A pibooth plugin to control two independent LED outputs.'
 
 
 def main():
