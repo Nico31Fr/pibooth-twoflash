@@ -22,10 +22,10 @@ Below are the new configuration options available in the [pibooth](https://pypi.
 [FLASH]
 
 # GPIO OUT pin for LED 1
-led1_pin = 12
+led1_pin = 18
     
 # GPIO OUT pin for LED 2
-led2_pin = 13
+led2_pin = 12
 
 # Duration of one complete crossfade cycle in milliseconds
 crossfade_speed = 2000

@@ -1,6 +1,5 @@
     # -*- coding: utf-8 -*-
 
-from math import cos, pi
 from threading import Event, Thread
 from time import monotonic
 from gpiozero import PWMOutputDevice
@@ -34,9 +33,9 @@ def pibooth_configure(cfg):
 def pibooth_startup(app, cfg):
     """Configure the two LED outputs."""
     app.pin_led1 = cfg.gettyped('FLASH', 'led1_pin')
-    app.strip_led1 = PWMOutputDevice(app.pin_led1, frequency=100, initial_value=0)
+    app.strip_led1 = PWMOutputDevice(app.pin_led1, frequency=200, initial_value=0)
     app.pin_led2 = cfg.gettyped('FLASH', 'led2_pin')
-    app.strip_led2 = PWMOutputDevice(app.pin_led2, frequency=100, initial_value=0)
+    app.strip_led2 = PWMOutputDevice(app.pin_led2, frequency=200, initial_value=0)
     app.crossfade_stop = None
     app.crossfade_thread = None
 
@@ -52,14 +51,25 @@ def _stop_crossfade(app):
 
 
 def _crossfade(app, stop_event, speed, max_brightness):
-    """Animate a smooth, complementary crossfade until capture starts."""
+    """Fade one LED at a time until capture starts; never overlap outputs."""
     period = max(speed, 1) / 1000.0
     started = monotonic()
     while not stop_event.is_set():
         phase = ((monotonic() - started) % period) / period
-        # A cosine gives a smooth transition from LED 1 to LED 2 and back.
-        led1 = max_brightness * (1 + cos(2 * pi * phase)) / 2
-        led2 = max_brightness * (1 - cos(2 * pi * phase)) / 2
+        # Fade LED 1 out, LED 2 in and out, then LED 1 back in. The inactive
+        # LED stays at zero throughout each ramp, so the outputs never overlap.
+        if phase < 0.25:
+            led1 = max_brightness * (1 - phase * 4)
+            led2 = 0
+        elif phase < 0.5:
+            led1 = 0
+            led2 = max_brightness * (phase - 0.25) * 4
+        elif phase < 0.75:
+            led1 = 0
+            led2 = max_brightness * (1 - (phase - 0.5) * 4)
+        else:
+            led1 = max_brightness * (phase - 0.75) * 4
+            led2 = 0
         app.strip_led1.value = led1 / 100
         app.strip_led2.value = led2 / 100
         stop_event.wait(0.02)
