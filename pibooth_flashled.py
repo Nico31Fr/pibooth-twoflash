@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from time import sleep
-import pigpio
+from gpiozero import PWMOutputDevice
 
 import pibooth
 from pibooth.utils import LOGGER
 
 
 
-__version__ = "1.1.1"
+__version__ = "1.2.0"
 
 
 
@@ -34,12 +34,10 @@ def state_chosen_exit(app, cfg):
     """Configure LED strips (warm white and cool white).
     """
     app.pin_warmwhite = cfg.gettyped('FLASH', 'warmwhite_pin')
-    app.strip_warmwhite = pigpio.pi()
-    app.strip_warmwhite.set_mode(app.pin_warmwhite, pigpio.OUTPUT)
+    app.strip_warmwhite = PWMOutputDevice(app.pin_warmwhite, frequency=100, initial_value=0)
 
     app.pin_coolwhite = cfg.gettyped('FLASH', 'coolwhite_pin')
-    app.strip_coolwhite = pigpio.pi()
-    app.strip_coolwhite.set_mode(app.pin_coolwhite, pigpio.OUTPUT)
+    app.strip_coolwhite = PWMOutputDevice(app.pin_coolwhite, frequency=100, initial_value=0)
 
     """Turn on the flash.
     """
@@ -56,16 +54,16 @@ def state_chosen_exit(app, cfg):
         step_coolwhite = white_balance[1] / steps_number
 
         while level_warmwhite <= white_balance[0] and level_coolwhite <= white_balance[1]:
-            app.strip_warmwhite.hardware_PWM(app.pin_warmwhite, 100, int(level_warmwhite * brightness * 100))
-            app.strip_coolwhite.hardware_PWM(app.pin_coolwhite, 100, int(level_coolwhite * brightness * 100))
+            app.strip_warmwhite.value = level_warmwhite * brightness / 10000
+            app.strip_coolwhite.value = level_coolwhite * brightness / 10000
 
             sleep(10 / 1000)
 
             level_warmwhite += step_warmwhite
             level_coolwhite += step_coolwhite
 
-    app.strip_warmwhite.hardware_PWM(app.pin_warmwhite, 100, int(white_balance[0] * brightness * 100))
-    app.strip_coolwhite.hardware_PWM(app.pin_coolwhite, 100, int(white_balance[1] * brightness * 100))
+    app.strip_warmwhite.value = white_balance[0] * brightness / 10000
+    app.strip_coolwhite.value = white_balance[1] * brightness / 10000
 
 @pibooth.hookimpl
 def state_processing_enter(app, cfg):
@@ -84,18 +82,18 @@ def state_processing_enter(app, cfg):
         step_coolwhite = white_balance[1] / steps_number
 
         while level_warmwhite >= 0 and level_coolwhite >= 0:
-            app.strip_warmwhite.hardware_PWM(app.pin_warmwhite, 100, int(level_warmwhite * brightness * 100))
-            app.strip_coolwhite.hardware_PWM(app.pin_coolwhite, 100, int(level_coolwhite * brightness * 100))
+            app.strip_warmwhite.value = level_warmwhite * brightness / 10000
+            app.strip_coolwhite.value = level_coolwhite * brightness / 10000
 
             sleep(10 / 1000)
 
             level_warmwhite -= step_warmwhite
             level_coolwhite -= step_coolwhite
 
-    app.strip_warmwhite.hardware_PWM(app.pin_warmwhite, 100, 0)
-    app.strip_coolwhite.hardware_PWM(app.pin_coolwhite, 100, 0)
+    app.strip_warmwhite.value = 0
+    app.strip_coolwhite.value = 0
 
     """Stop LED strips (warm white and cool white).
     """
-    app.strip_warmwhite.stop()
-    app.strip_coolwhite.stop()
+    app.strip_warmwhite.close()
+    app.strip_coolwhite.close()

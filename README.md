@@ -13,10 +13,7 @@ Install
 -------
 
 ```
-pip3 install pibooth-flashled
-    
-sudo systemctl enable pigpiod
-sudo systemctl start pigpiod 
+pip3 install git+https://github.com/Nico31Fr/pibooth-flashled.git
 ```
     
 
