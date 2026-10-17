@@ -15,9 +15,9 @@ __version__ = "1.2.0"
 @pibooth.hookimpl
 def pibooth_configure(cfg):
     """Declare the new configuration options"""
-    cfg.add_option('FLASH', 'led1_pin', 12,
+    cfg.add_option('FLASH', 'led1_pin', 18,
                    "GPIO OUT pin to light LED 1")
-    cfg.add_option('FLASH', 'led2_pin', 13,
+    cfg.add_option('FLASH', 'led2_pin', 19,
                    "GPIO OUT pin to light LED 2")
     cfg.add_option('FLASH', 'crossfade_speed', 2000,
                    "Duration of one complete LED crossfade cycle in milliseconds",
