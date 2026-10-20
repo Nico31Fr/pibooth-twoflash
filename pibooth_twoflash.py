@@ -28,6 +28,9 @@ def pibooth_configure(cfg):
     cfg.add_option('FLASH', 'capture_brightness', 100,
                    "Brightness of both LEDs during capture, in percent",
                    'Capture brightness (%)', [str(i) for i in range(0, 101, 10)])
+    cfg.add_option('FLASH', 'preflash_lead', 1000,
+                   "Time before the end of the countdown when both LEDs light up at capture brightness, in milliseconds",
+                   'Pre-flash lead time (ms)', [str(i) for i in range(0, 3001, 250)])
 
 @pibooth.hookimpl
 def pibooth_startup(app, cfg):
@@ -50,12 +53,19 @@ def _stop_crossfade(app):
     app.crossfade_thread = None
 
 
-def _crossfade(app, stop_event, speed, max_brightness):
-    """Fade one LED at a time until capture starts; never overlap outputs."""
+def _crossfade(app, stop_event, speed, max_brightness, preflash_at, capture_brightness):
+    """Fade one LED at a time until the pre-flash; never overlap outputs."""
     period = max(speed, 1) / 1000.0
     started = monotonic()
     while not stop_event.is_set():
-        phase = ((monotonic() - started) % period) / period
+        elapsed = monotonic() - started
+        if elapsed >= preflash_at:
+            # Both LEDs stay at capture brightness so the camera exposure is
+            # measured under the same light as the capture.
+            app.strip_led1.value = capture_brightness
+            app.strip_led2.value = capture_brightness
+            return
+        phase = (elapsed % period) / period
         # Fade LED 1 out, LED 2 in and out, then LED 1 back in. The inactive
         # LED stays at zero throughout each ramp, so the outputs never overlap.
         if phase < 0.25:
@@ -77,15 +87,18 @@ def _crossfade(app, stop_event, speed, max_brightness):
 
 @pibooth.hookimpl
 def state_preview_enter(cfg, app):
-    """Crossfade both LEDs throughout the preview/countdown."""
+    """Crossfade both LEDs during the countdown, then pre-flash before the capture."""
     _stop_crossfade(app)
     stop_event = Event()
     app.crossfade_stop = stop_event
+    preflash_at = max(cfg.getint('WINDOW', 'preview_delay') - cfg.getint('FLASH', 'preflash_lead') / 1000, 0)
     app.crossfade_thread = Thread(
         target=_crossfade,
         args=(app, stop_event,
               cfg.gettyped('FLASH', 'crossfade_speed'),
-              cfg.gettyped('FLASH', 'crossfade_max_brightness')),
+              cfg.gettyped('FLASH', 'crossfade_max_brightness'),
+              preflash_at,
+              cfg.gettyped('FLASH', 'capture_brightness') / 100),
         daemon=True)
     app.crossfade_thread.start()
 
