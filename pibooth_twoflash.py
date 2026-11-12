@@ -31,6 +31,10 @@ def pibooth_configure(cfg):
     cfg.add_option('FLASH', 'preflash_lead', 1000,
                    "Time before the end of the countdown when both LEDs light up at capture brightness, in milliseconds",
                    'Pre-flash lead time (ms)', [str(i) for i in range(0, 3001, 250)])
+    cfg.add_option('FLASH', 'animation', 'swing',
+                   "LED animation during the countdown: 'swing' (one LED after the other) "
+                   "or 'fade' (both LEDs fading together)",
+                   'Animation', ['swing', 'fade'])
 
 @pibooth.hookimpl
 def pibooth_startup(app, cfg):
@@ -53,8 +57,33 @@ def _stop_crossfade(app):
     app.crossfade_thread = None
 
 
-def _crossfade(app, stop_event, speed, max_brightness, preflash_at, capture_brightness):
-    """Fade one LED at a time until the pre-flash; never overlap outputs."""
+def _swing(phase, max_brightness):
+    """Fade LED 1 out, LED 2 in and out, then LED 1 back in.
+
+    The inactive LED stays at zero throughout each ramp, so the outputs never
+    overlap.
+    """
+    if phase < 0.25:
+        return max_brightness * (1 - phase * 4), 0
+    if phase < 0.5:
+        return 0, max_brightness * (phase - 0.25) * 4
+    if phase < 0.75:
+        return 0, max_brightness * (1 - (phase - 0.5) * 4)
+    return max_brightness * (phase - 0.75) * 4, 0
+
+
+def _fade(phase, max_brightness):
+    """Fade both LEDs in and out together."""
+    if phase < 0.5:
+        value = max_brightness * phase * 2
+    else:
+        value = max_brightness * (1 - (phase - 0.5) * 2)
+    return value, value
+
+
+def _animate(app, stop_event, speed, max_brightness, preflash_at,
+             capture_brightness, shape):
+    """Animate both LEDs until the pre-flash, then hold the capture light."""
     period = max(speed, 1) / 1000.0
     started = monotonic()
     while not stop_event.is_set():
@@ -66,20 +95,7 @@ def _crossfade(app, stop_event, speed, max_brightness, preflash_at, capture_brig
             app.strip_led2.value = capture_brightness
             return
         phase = (elapsed % period) / period
-        # Fade LED 1 out, LED 2 in and out, then LED 1 back in. The inactive
-        # LED stays at zero throughout each ramp, so the outputs never overlap.
-        if phase < 0.25:
-            led1 = max_brightness * (1 - phase * 4)
-            led2 = 0
-        elif phase < 0.5:
-            led1 = 0
-            led2 = max_brightness * (phase - 0.25) * 4
-        elif phase < 0.75:
-            led1 = 0
-            led2 = max_brightness * (1 - (phase - 0.5) * 4)
-        else:
-            led1 = max_brightness * (phase - 0.75) * 4
-            led2 = 0
+        led1, led2 = shape(phase, max_brightness)
         app.strip_led1.value = led1 / 100
         app.strip_led2.value = led2 / 100
         stop_event.wait(0.02)
@@ -87,18 +103,20 @@ def _crossfade(app, stop_event, speed, max_brightness, preflash_at, capture_brig
 
 @pibooth.hookimpl
 def state_preview_enter(cfg, app):
-    """Crossfade both LEDs during the countdown, then pre-flash before the capture."""
+    """Animate both LEDs during the countdown, then pre-flash before the capture."""
     _stop_crossfade(app)
     stop_event = Event()
     app.crossfade_stop = stop_event
     preflash_at = max(cfg.getint('WINDOW', 'preview_delay') - cfg.getint('FLASH', 'preflash_lead') / 1000, 0)
+    animation = cfg.gettyped('FLASH', 'animation')
     app.crossfade_thread = Thread(
-        target=_crossfade,
+        target=_animate,
         args=(app, stop_event,
               cfg.gettyped('FLASH', 'crossfade_speed'),
               cfg.gettyped('FLASH', 'crossfade_max_brightness'),
               preflash_at,
-              cfg.gettyped('FLASH', 'capture_brightness') / 100),
+              cfg.gettyped('FLASH', 'capture_brightness') / 100,
+              _fade if animation == 'fade' else _swing),
         daemon=True)
     app.crossfade_thread.start()
 

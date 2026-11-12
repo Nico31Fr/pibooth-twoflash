@@ -36,6 +36,10 @@ crossfade_max_brightness = 50
 # Brightness of both LEDs during capture, in percent
 capture_brightness = 100
 
+# LED animation during the preview: 'swing' (one LED after the other)
+# or 'fade' (both LEDs fading together)
+animation = swing
+
 ```
 
 Edit the configuration by running the command `pibooth --config`.
